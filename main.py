@@ -54,7 +54,6 @@ def init_textures():
 
 
 def load_texture(file_name):
-    #texture = pyglet.image.load(file_name).get_texture()
     texture = pyglet.resource.texture(file_name)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
@@ -62,7 +61,6 @@ def load_texture(file_name):
 
 
 def load_anim(file_name):
-    #texture = pyglet.image.load(file_name).get_texture()
     texture = pyglet.resource.animation(file_name)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
@@ -70,20 +68,30 @@ def load_anim(file_name):
 
 
 class Boxel:
+    inc = 0
 
     def __init__(self, xyz, tex, dim=(1, 1, 1)):
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
         self.dim = list(dim) # width, height, length
-        #self.texture = load_anim(f"assets/textures/boxels/bg.gif")
         self.tex_index = tex
-        self.texture = load_texture(f"assets/textures/boxels/{tex_lst[self.tex_index][0]}")
+        self.tex_name = tex_lst[self.tex_index][0]
+        self.texture = load_texture(f"assets/textures/boxels/{self.tex_name}")
+        self.alpha = 1
+        # if 'water' in self.tex_name.split('_')[0]:
+        #     self.alpha -= 0.25
         self.draw_block(xyz)
 
     def update_anim(self, dt):
         anim_frame = math.floor(sync_frame) % len(tex_lst[self.tex_index])
         self.batch = pyglet.graphics.Batch()
         self.texture = load_texture(f"assets/textures/boxels/{tex_lst[self.tex_index][anim_frame]}")
+        self.draw_block(self.position)
+
+    def update(self, dt):
+        self.inc = (self.inc + math.pi * dt) % (2*math.pi)
+        self.dim = [x + (dt * math.sin(self.inc)/6) for x in self.dim]
+        self.batch = pyglet.graphics.Batch()
         self.draw_block(self.position)
 
     # I have yet to discover how the entire texture is mapped to the cube
@@ -93,6 +101,7 @@ class Boxel:
     def draw_block(self, position):
         x, y, z = position
         dim = self.dim
+        alpha = self.alpha
         self.batch.add(
             14,
             GL_TRIANGLE_STRIP,
@@ -128,12 +137,40 @@ class Boxel:
                             4 / 8, 3 / 4,  # 13
                             5 / 8, 3 / 4  # 14
                             )
+             ),
+            ("c4f/static", (255, 255, 255, alpha,  # 1
+                            255, 255, 255, alpha,  # 2
+                            255, 255, 255, alpha,  # 3
+                            255, 255, 255, alpha,  # 4
+                            255, 255, 255, alpha,  # 5
+                            255, 255, 255, alpha,  # 6
+                            255, 255, 255, alpha,  # 7
+                            255, 255, 255, alpha,  # 8
+                            255, 255, 255, alpha,  # 9
+                            255, 255, 255, alpha,  # 1255
+                            255, 255, 255, alpha,  # 11
+                            255, 255, 255, alpha,  # 12
+                            255, 255, 255, alpha,  # 13
+                            255, 255, 255, alpha  # 14
+                            )
              )
         )
 
 
 class CursorBlock(Boxel):
     inc = 0
+
+    def __init__(self, xyz, tex, dim=(1, 1, 1)):
+        self.batch = pyglet.graphics.Batch()
+        self.position = list(xyz)
+        self.dim = list(dim) # width, height, length
+        self.tex_index = tex
+        tex_name = tex_lst[self.tex_index][0]
+        self.texture = load_texture(f"assets/textures/boxels/{tex_name}")
+        self.alpha = 0.75
+        # if 'water' in tex_name.split('_')[0]:
+        #     self.alpha -= 0.25
+        self.draw_block(xyz)
 
     def update_position(self, xyz):
         self.position = list(xyz)
@@ -149,8 +186,9 @@ class CursorBlock(Boxel):
         self.draw_block(self.position)
 
     def update(self, dt):
-        self.inc = (self.inc + math.pi * dt) % (2*math.pi)
-        self.dim = [x - (dt * math.sin(self.inc)/3) for x in self.dim]
+        pass
+        #self.inc = (self.inc + math.pi * dt) % (2*math.pi)
+        #self.dim = [x + (dt * math.sin(self.inc)/6) for x in self.dim]
 
 
 def add_block(x, y, z, tex=tex_index):
@@ -164,6 +202,13 @@ def remove_block(x, y, z):
     for i in list(boxel):
         if i.position == list((x, y, z)):
             boxel.remove(i)
+            return
+
+
+def block_hover(xyz, dt):
+    for i in list(boxel):
+        if i.position == list(xyz):
+            i.update(dt)
             return
 
 
@@ -463,7 +508,9 @@ class Window(pyglet.window.Window):
             self.camera.strafe[1] = 0
 
     def update(self, dt):
-        self.cursor_block.update_position(self.grid_select(*self.mouse_pos))
+        mouse_over = self.grid_select(*self.mouse_pos)
+        self.cursor_block.update_position(mouse_over)
+        block_hover(mouse_over, dt)
         self.cursor_block.update(dt)
         self.camera.update(dt)
         # Call update for boxels that are animated
@@ -487,6 +534,7 @@ class Window(pyglet.window.Window):
         width, height = self.get_size()
         glEnable(GL_CULL_FACE)
         glEnable(GL_DEPTH_TEST)
+        #glDepthFunc(GL_LEQUAL)
         glDepthFunc(GL_LESS)
         viewport = self.get_viewport_size()
         #glViewport(0, 0, max(1, viewport[0]), max(1, viewport[1]))
@@ -513,8 +561,7 @@ class Window(pyglet.window.Window):
         return pyglet.event.EVENT_HANDLED
 
     def on_draw(self):
-        # self.clear()
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.clear()
         self.set_3d()
         self.grid.draw_grid()
         for i in boxel:
@@ -564,8 +611,8 @@ def setup_fog():
 def setup():
     # Background color (r,g,b,a)
     glClearColor(0.3, 0.8, 0.96, 1)
-    #glEnable(GL_BLEND)
-    #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_CULL_FACE)
     glCullFace(GL_BACK)
     glFrontFace(GL_CW)
