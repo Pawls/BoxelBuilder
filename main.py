@@ -11,88 +11,111 @@ from pyglet import window, graphics
 from pyglet.gl import *
 from pyglet.window import FPSDisplay
 
-# boxel_batch = pyglet.graphics.Batch()
-# boxels_position = []
-total_serial_inputs = 0
-boxel = []
-tex_lst = []
-tex_index = 0
-sync_frame = 0
 
+class World:
 
-def save():
-    files = [('World File', '*.wld')]
-    file = asksaveasfile(filetypes=files, defaultextension=files)
-    f = open(file.name, "wb")
-    data = []
-    for i in boxel:
-        data.append([i.tex_index, i.position])
-    pickle.dump(data, f)
-    f.close()
+    def __init__(self):
+        self.boxel = []
+        self.tex_index = 0
+        self.tex_lst = self.init_textures()
+        self.init_textures()
 
+    # Look in "assets/textures/boxels/*" for all textures
+    def init_textures(self):
+        path = "assets/textures/boxels/"
+        tex_lst = [f for f in listdir(path) if isfile(join(path, f))]
+        tex_lst.sort()
+        tex_lst = [list(i) for j, i in groupby(tex_lst, lambda a: a.split('_')[0])]
+        for x in tex_lst:
+            for y in range(len(x)):
+                texture = pyglet.resource.texture(path + x[y])
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+                x[y] = pyglet.graphics.TextureGroup(texture)
+        return tex_lst
 
-def load():
-    global boxel
+    #  Saves the current boxel world to a file
+    def save(self, world):
+        files = [('World File', '*.wld')]
+        file = asksaveasfile(filetypes=files, defaultextension=files)
+        f = open(file.name, "wb")
+        data = []
+        for box in world:
+            data.append([box.tex_index, box.position])
+        pickle.dump(data, f)
+        f.close()
 
-    files = [('World File', '*.wld')]
-    file = askopenfile(filetypes=files, defaultextension=files)
-    f = open(file.name, "rb")
-    data = pickle.load(f)
-    boxel = []
-    for i, j in data:
-        add_block(*j, i)
-    f.close()
+    def load(self):
+        file_types = [('World File', '*.wld')]
+        file = askopenfile(filetypes=file_types, defaultextension=file_types)
+        f = open(file.name, "rb")
+        data = pickle.load(f)
+        world = []
+        for i, j in data:
+            self.add_block(j, i)
+        f.close()
+        return world
 
+    def create_cursor(self):
+        return CursorBlock(self, (0, 0, 0))
 
-# Look in "assets/textures/boxels/*" for all textures
-def init_textures():
-    global tex_lst
-    mypath = "assets/textures/boxels/"
-    tex_lst = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-    tex_lst.sort()
-    tex_lst = [list(i) for j, i in groupby(tex_lst, lambda a: a.split('_')[0])]
+    def add_block(self, xyz):
+        for x in list(self.boxel):
+            if x.position == list(xyz):
+                return
+        self.boxel.append(Boxel(self, xyz))
 
+    def del_block(self, xyz):
+        for x in list(self.boxel):
+            if x.position == list(xyz):
+                self.boxel.remove(x)
+                return
 
-def load_texture(file_name):
-    texture = pyglet.resource.texture(file_name)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    return pyglet.graphics.TextureGroup(texture)
+    def stress_test(self):
+        for i in range(3, 13):
+            for j in range(3, 13):
+                for k in range(16):
+                    self.add_block((i, k, j))
 
+    def update(self, dt, sync):
+        for x in self.boxel:
+            x.update(dt, sync)
 
-def load_anim(file_name):
-    texture = pyglet.resource.animation(file_name)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    return pyglet.graphics.TextureGroup(texture)
+    def draw(self):
+        for x in self.boxel:
+            x.batch.draw()
 
 
 class Boxel:
     inc = 0
 
-    def __init__(self, xyz, tex, dim=(1, 1, 1)):
+    def __init__(self, parent, xyz, dim=(1, 1, 1)):
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
-        self.dim = list(dim) # width, height, length
-        self.tex_index = tex
-        self.tex_name = tex_lst[self.tex_index][0]
-        self.texture = load_texture(f"assets/textures/boxels/{self.tex_name}")
+        self.dim = list(dim)  # width, height, length
+        self.tex_index = parent.tex_index
+        self.tex_sequence = parent.tex_lst[self.tex_index]
+        self.texture = self.tex_sequence[0]
         self.alpha = 1
-        # if 'water' in self.tex_name.split('_')[0]:
-        #     self.alpha -= 0.25
         self.draw_block(xyz)
 
     def update_anim(self, dt):
-        anim_frame = math.floor(sync_frame) % len(tex_lst[self.tex_index])
-        self.batch = pyglet.graphics.Batch()
-        self.texture = load_texture(f"assets/textures/boxels/{tex_lst[self.tex_index][anim_frame]}")
-        self.draw_block(self.position)
+        pass
+        #anim_frame = math.floor(sync_frame) % len(tex_lst[self.tex_index])
+        # self.batch = pyglet.graphics.Batch()
+        # self.texture = tex_lst[self.tex_index][anim_frame]
+        # self.draw_block(self.position)
 
-    def update(self, dt):
-        self.inc = (self.inc + math.pi * dt) % (2*math.pi)
-        self.dim = [x + (dt * math.sin(self.inc)/6) for x in self.dim]
-        self.batch = pyglet.graphics.Batch()
-        self.draw_block(self.position)
+    def update(self, dt, sync_frame):
+        if len(self.tex_sequence) > 1:
+            anim_frame = math.floor(sync_frame) % len(self.tex_sequence)
+            self.batch = pyglet.graphics.Batch()
+            self.texture = self.tex_sequence[anim_frame]
+            self.draw_block(self.position)
+        #self.inc = (self.inc + math.pi * dt) % (2*math.pi)
+        #self.dim = [x + (dt * math.sin(self.inc)/6) for x in self.dim]
+        #self.batch = pyglet.graphics.Batch()
+        #self.draw_block(self.position)
 
     # I have yet to discover how the entire texture is mapped to the cube
     # using only texture coords (0,0)-(5/8,3/4). It should have been
@@ -160,16 +183,14 @@ class Boxel:
 class CursorBlock(Boxel):
     inc = 0
 
-    def __init__(self, xyz, tex, dim=(1, 1, 1)):
+    def __init__(self, parent, xyz, dim=(1, 1, 1)):
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
-        self.dim = list(dim) # width, height, length
-        self.tex_index = tex
-        tex_name = tex_lst[self.tex_index][0]
-        self.texture = load_texture(f"assets/textures/boxels/{tex_name}")
+        self.dim = list(dim)  # width, height, length
+        self.tex_index = parent.tex_index
+        self.tex_sequence = parent.tex_lst[self.tex_index]
+        self.texture = self.tex_sequence[0]
         self.alpha = 0.75
-        # if 'water' in tex_name.split('_')[0]:
-        #     self.alpha -= 0.25
         self.draw_block(xyz)
 
     def update_position(self, xyz):
@@ -180,8 +201,8 @@ class CursorBlock(Boxel):
         self.batch = pyglet.graphics.Batch()
         self.draw_block(self.position)
 
-    def update_texture(self):
-        self.texture = load_texture(f"assets/textures/boxels/{tex_lst[tex_index][0]}")
+    def update_texture(self, parent):
+        self.texture = parent.tex_lst[parent.tex_index][0]
         self.batch = pyglet.graphics.Batch()
         self.draw_block(self.position)
 
@@ -191,25 +212,11 @@ class CursorBlock(Boxel):
         #self.dim = [x + (dt * math.sin(self.inc)/6) for x in self.dim]
 
 
-def add_block(x, y, z, tex=tex_index):
-    for i in list(boxel):
-        if i.position == list((x, y, z)):
-            return
-    boxel.append(Boxel((x, y, z), tex))
-
-
-def remove_block(x, y, z):
-    for i in list(boxel):
-        if i.position == list((x, y, z)):
-            boxel.remove(i)
-            return
-
-
-def block_hover(xyz, dt):
-    for i in list(boxel):
-        if i.position == list(xyz):
-            i.update(dt)
-            return
+# def block_hover(xyz, dt, sync_frame):
+#     for i in list(boxel):
+#         if i.position == list(xyz):
+#             i.update(dt, sync_frame)
+#             return
 
 
 class Camera:
@@ -308,25 +315,20 @@ class Grid:
                           )
 
 
-def stress_test():
-    for i in range(3, 13):
-        for j in range(3, 13):
-            for k in range(16):
-                add_block(i, k, j)
-
-
 class Window(pyglet.window.Window):
-    global boxel
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.ser = self.init_sensor()
+        self.total_serial_inputs = 0
+        self.world = World()
+        self.sync_frame = 0
         self.mouse_pos = (0, 0)
         self.frame_rate = 1 / 60
         self.fps_display = FPSDisplay(self)
         self.grid = Grid(1, 1, 0, 0)
         self.camera = Camera()
-        self.cursor_block = CursorBlock((0, 0, 0), tex_index, dim=(1, 1, 1))
+        self.cursor_block = self.world.create_cursor()
         self.label = pyglet.text.Label('Move = W,A,S,D\tUp\\Down = R\\F',
                                        font_name='Calibri',
                                        font_size=12,
@@ -418,10 +420,10 @@ class Window(pyglet.window.Window):
     def on_mouse_press(self, x, y, button, modifiers):
         if button == window.mouse.LEFT:
             xyz = self.grid_select(x, y)
-            add_block(xyz[0], xyz[1], xyz[2], tex_index)
+            self.world.add_block(xyz)
         elif button == window.mouse.RIGHT:
             xyz = self.grid_select(x, y)
-            remove_block(xyz[0], xyz[1], xyz[2])
+            self.world.del_block(xyz)
 
     def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
         self.mouse_pos = (x, y)
@@ -429,16 +431,15 @@ class Window(pyglet.window.Window):
             self.camera.mouse_motion(dx, dy)
         elif button == window.mouse.LEFT:
             xyz = self.grid_select(x, y)
-            add_block(xyz[0], xyz[1], xyz[2], tex_index)
+            self.world.add_block(xyz)
         elif button == window.mouse.RIGHT:
             xyz = self.grid_select(x, y)
-            remove_block(xyz[0], xyz[1], xyz[2])
+            self.world.del_block(xyz)
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = (x, y)
 
     def on_key_press(self, symbol, modifiers):
-        global tex_index
 
         if symbol == window.key.ESCAPE:
             self.close()
@@ -455,43 +456,20 @@ class Window(pyglet.window.Window):
             self.camera.strafe[1] = speed
         elif symbol == window.key.F:
             self.camera.strafe[1] = -speed
-        elif symbol == window.key.NUM_1:
-            add_block(0, self.grid.level, 0)
-        elif symbol == window.key.NUM_2:
-            add_block(0, self.grid.level, 1)
-        elif symbol == window.key.NUM_3:
-            add_block(0, self.grid.level, 2)
-        elif symbol == window.key.NUM_4:
-            add_block(1, self.grid.level, 0)
-        elif symbol == window.key.NUM_5:
-            add_block(1, self.grid.level, 1)
-        elif symbol == window.key.NUM_6:
-            add_block(1, self.grid.level, 2)
-        elif symbol == window.key.NUM_7:
-            add_block(2, self.grid.level, 0)
-        elif symbol == window.key.NUM_8:
-            add_block(2, self.grid.level, 1)
-        elif symbol == window.key.NUM_9:
-            add_block(2, self.grid.level, 2)
         elif symbol == window.key.RETURN:
-            ser.write("\n".encode())
+            self.ser.write("\n".encode())
         elif symbol == window.key.NUM_ADD:
-            tex_index += 1
-            tex_index %= len(tex_lst)
-            self.cursor_block.update_texture()
+            self.world.tex_index += 1
+            self.world.tex_index %= len(self.world.tex_lst)
+            self.cursor_block.update_texture(self.world)
         elif symbol == window.key.NUM_SUBTRACT:
-            tex_index -= 1
-            tex_index %= len(tex_lst)
-            self.cursor_block.update_texture()
+            self.world.tex_index -= 1
+            self.world.tex_index %= len(self.world.tex_lst)
+            self.cursor_block.update_texture(self.world)
         elif symbol == window.key.F11:
-            save()
+            self.world.save()
         elif symbol == window.key.F12:
-            load()
-        elif symbol == window.key.F10:
-            print("test")
-            self.cursor_block.position[1] += 1
-            for i in boxel:
-                i.position[1] += 1
+            self.world.load()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == window.key.W:
@@ -508,14 +486,17 @@ class Window(pyglet.window.Window):
             self.camera.strafe[1] = 0
 
     def update(self, dt):
+        self.update_sensor()
+        self.sync_frame += dt
+        # modulus by max animation frames
+        self.sync_frame %= 4
+
         mouse_over = self.grid_select(*self.mouse_pos)
         self.cursor_block.update_position(mouse_over)
-        block_hover(mouse_over, dt)
+        #block_hover(mouse_over, dt, self.sync_frame)
         self.cursor_block.update(dt)
         self.camera.update(dt)
-        # Call update for boxels that are animated
-        for i in [j for j in boxel if len(tex_lst[j.tex_index]) > 1]:
-            i.update_anim(dt)
+        self.world.update(dt, self.sync_frame)
 
     def set_2d(self):
         width, height = self.get_size()
@@ -560,43 +541,47 @@ class Window(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
         return pyglet.event.EVENT_HANDLED
 
+    def init_sensor(self):
+        # Setup Sensor if connected
+        ser = False
+        try:
+            ser = serial.Serial('COM3', 9600, timeout=0.050)
+            ser.flushInput()
+        except:
+            print("Sensor not connected...")
+        finally:
+            return ser
+
+    def update_sensor(self):
+
+        try:
+            while self.ser.in_waiting:
+                sensor_input = self.ser.readline()
+                read_sensor = sensor_input.decode()
+                print(read_sensor)
+                self.total_serial_inputs += 1
+                if self.total_serial_inputs > 2:
+                    sensor_objects = read_sensor.split()
+                    for row in range(3):
+                        for column in range(3):
+                            block_stack = int(sensor_objects[row * 3 + column])
+                            for i in range(1, 4):
+                                if i > block_stack:
+                                    self.world.del_block((row, i - 1, column))
+                                else:
+                                    self.world.add_block((row, i - 1, column))
+        except:
+            pass
+
     def on_draw(self):
         self.clear()
         self.set_3d()
         self.grid.draw_grid()
-        for i in boxel:
-            i.batch.draw()
+        self.world.draw()
         self.cursor_block.batch.draw()
         self.set_2d()
         self.fps_display.draw()
         self.label.draw()
-
-
-def update(dt):
-    global total_serial_inputs
-    global sync_frame
-    sync_frame += dt
-    # modulus by max animation frames
-    sync_frame %= 4
-
-    try:
-        while ser.in_waiting:
-            sensor_input = ser.readline()
-            read_sensor = sensor_input.decode()
-            print(read_sensor)
-            total_serial_inputs += 1
-            if total_serial_inputs > 2:
-                sensor_objects = read_sensor.split()
-                for row in range(3):
-                    for column in range(3):
-                        block_stack = int(sensor_objects[row * 3 + column])
-                        for i in range(1, 4):
-                            if i > block_stack:
-                                remove_block(row, i-1, column)
-                            else:
-                                add_block(row, i-1, column)
-    except:
-        pass
 
 
 def setup_fog():
@@ -621,18 +606,10 @@ def setup():
 
 
 if __name__ == "__main__":
-    # Setup Sensor if connected
-    try:
-        ser = serial.Serial('COM3', 9600, timeout=0.050)
-        ser.flushInput()
-    except:
-        print("Sensor not connected...")
-    init_textures()
     root = Tk()
     root.geometry('200x150')
     root.withdraw()
     Window(width=800, height=480, resizable=True, vsync=False)
     # Window(fullscreen=True)
-    pyglet.clock.schedule_interval(update, 1 / 60.)
     setup()
     pyglet.app.run()
