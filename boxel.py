@@ -11,6 +11,7 @@ class Boxel:
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
         self.dim = list(dim)  # width, height, length
+        print(tex)
         if tex is None:
             self.tex_index = parent.tex_index
         else:

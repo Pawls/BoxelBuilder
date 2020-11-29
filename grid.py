@@ -17,10 +17,10 @@ class Grid:
     # Get grid sector from mouse click
     def select(self, mouse_x, mouse_y, camera, window):
         cam_yaw, cam_pitch = (math.radians(x) for x in camera.rotation)
+        cam_pitch = max(min(cam_pitch, 1.565), -1.565) # Prevent pitch from being perfect vertical
         cam_fov = 45
         cell_size = 1
         level = self.level
-
         display_w, display_h = window.get_size()
         aspect = display_w / display_h
         mouse_y = display_h - mouse_y  # Flip the y-coordinate (OpenGL y-coord is inverted)

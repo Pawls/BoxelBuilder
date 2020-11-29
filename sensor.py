@@ -77,15 +77,14 @@ class Sensor:
         x, y, z = self.position
         w, h, d = self.dim
         overlap = 0.05
-        x -= overlap
-        z -= overlap
-        y -= overlap
-        w += overlap * 2
-        h += overlap * 2
-        d += overlap * 2
+        x += overlap
+        z += overlap
+        y += overlap
+        w -= overlap * 2
+        h -= overlap * 2
+        d -= overlap * 2
         dx, dy, dz = x + w, y + h, z + d
         alpha = 0.25
-        #glFrontFace(GL_CCW)
         graphics.draw(
             20,
             GL_QUADS,
@@ -118,67 +117,6 @@ class Sensor:
                             )
              )
         )
-        #glFrontFace(GL_CW)
-
-    def draw_sensor3(self):
-        x, y, z = self.position
-        w, h, d = self.dim
-        overlap = 0.05
-        x -= overlap
-        z -= overlap
-        y -= overlap
-        w += overlap
-        h += overlap
-        d += overlap
-        alpha = 0.25
-        glFrontFace(GL_CCW)
-        graphics.draw(
-            14,
-            GL_TRIANGLE_STRIP,
-            ("v3f/static", (x + w, y, z,  # 1
-                            x, y, z,  # 2
-                            x + w, y, z + d,  # 3
-                            x, y, z + d,  # 4
-                            x, y + h, z + d,  # 5
-                            x, y, z,  # 6
-                            x, y + h, z,  # 7
-                            x + w, y, z,  # 8
-                            x + w, y + h, z,  # 9
-                            x + w, y, z + d,  # 10
-                            x + w, y + h, z + d,  # 11
-                            x, y + h, z + d,  # 12
-                            x + w, y + h, z,  # 13
-                            x, y + h, z  # 14
-                            )
-             ),
-            ("c4f/static", (255, 255, 255, alpha,  # 1
-                            255, 255, 255, alpha,  # 2
-                            255, 255, 255, alpha,  # 3
-                            255, 255, 255, alpha,  # 4
-                            255, 255, 255, alpha,  # 5
-                            255, 255, 255, alpha,  # 6
-                            255, 255, 255, alpha,  # 7
-                            255, 255, 255, alpha,  # 8
-                            255, 255, 255, alpha,  # 9
-                            255, 255, 255, alpha,  # 10
-                            255, 255, 255, alpha,  # 11
-                            255, 255, 255, alpha,  # 12
-                            255, 255, 255, alpha,  # 13
-                            255, 255, 255, alpha  # 14
-                            )
-             )
-        )
-        glFrontFace(GL_CW)
-
-    def draw_sensor2(self):
-        x, y, z = self.position
-        w, l, h = self.dim
-        y -= 0.05
-        dx, dy, dz = x + w, y + h, z + l
-        graphics.draw(4, GL_QUADS,
-                      ('v3f', (x, y, z, dx, y, z, dx, y, dz, x, y, dz)),
-                      ('c3B', (0, 255, 255, 0, 255, 255, 0, 255, 255, 0, 255, 255))
-                      )
 
     def draw(self):
         self.draw_sensor()

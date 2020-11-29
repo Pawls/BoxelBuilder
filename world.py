@@ -60,7 +60,7 @@ class World:
     def create_cursor(self):
         return CursorBlock(self, (0, 0, 0))
 
-    def add_block(self, xyz, tex=False):
+    def add_block(self, xyz, tex=None):
         for x in list(self.boxel):
             if x.position == list(xyz):
                 return
