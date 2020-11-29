@@ -7,11 +7,11 @@ from pyglet.gl import GL_TRIANGLE_STRIP
 class Boxel:
     inc = 0
 
-    def __init__(self, parent, xyz, tex, dim=(1, 1, 1)):
+    def __init__(self, parent, xyz, tex=None, dim=(1, 1, 1)):
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
         self.dim = list(dim)  # width, height, length
-        if not tex:
+        if tex is None:
             self.tex_index = parent.tex_index
         else:
             self.tex_index = tex

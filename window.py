@@ -1,7 +1,6 @@
 import math
 
 import pyglet
-import serial
 from pyglet import window
 from pyglet.gl import *
 from pyglet.gl import glDisable, GL_CULL_FACE, GL_DEPTH_TEST, glViewport, glMatrixMode, GL_PROJECTION, glLoadIdentity, \
@@ -10,6 +9,7 @@ from pyglet.window import FPSDisplay
 
 from camera import Camera
 from grid import Grid
+from sensor import Sensor
 from world import World
 
 
@@ -17,9 +17,8 @@ class Window(pyglet.window.Window):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.sensor = Sensor()
         self.setup()
-        self.ser = self.init_sensor()
-        self.total_serial_inputs = 0
         self.world = World()
         self.sync_frame = 0
         self.mouse_pos = (0, 0)
@@ -44,8 +43,12 @@ class Window(pyglet.window.Window):
                                        font_size=12,
                                        x=2, y=self.height - 15, multiline=True, width=120)
 
-    def on_mouse_scroll(self, x, y, mouse, direction):
+    def adjust_stage_height(self, direction):
         self.grid.scroll(direction)
+        self.sensor.move_y(direction)
+
+    def on_mouse_scroll(self, x, y, mouse, direction):
+        self.adjust_stage_height(direction)
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == window.mouse.LEFT:
@@ -87,7 +90,7 @@ class Window(pyglet.window.Window):
         elif symbol == window.key.F:
             self.camera.strafe[1] = -speed
         elif symbol == window.key.RETURN:
-            self.ser.write("\n".encode())
+            self.sensor.input_enter()
         elif symbol == window.key.NUM_ADD:
             self.world.tex_index += 1
             self.world.tex_index %= len(self.world.tex_lst)
@@ -100,6 +103,28 @@ class Window(pyglet.window.Window):
             self.world.save()
         elif symbol == window.key.F12:
             self.world.load()
+        elif symbol == window.key.NUM_1:
+            pass
+        elif symbol == window.key.NUM_2:
+            self.sensor.move_z(1)
+        elif symbol == window.key.NUM_3:
+            pass
+        elif symbol == window.key.NUM_4:
+            self.sensor.move_x(-1)
+        elif symbol == window.key.NUM_5:
+            self.sensor.commit_blocks(self.world)
+        elif symbol == window.key.NUM_6:
+            self.sensor.move_x(1)
+        elif symbol == window.key.NUM_7:
+            pass
+        elif symbol == window.key.NUM_8:
+            self.sensor.move_z(-1)
+        elif symbol == window.key.NUM_9:
+            pass
+        elif symbol == window.key.PAGEUP:
+            self.adjust_stage_height(1)
+        elif symbol == window.key.PAGEDOWN:
+            self.adjust_stage_height(-1)
 
     def on_key_release(self, symbol, modifiers):
         if symbol == window.key.W:
@@ -116,7 +141,7 @@ class Window(pyglet.window.Window):
             self.camera.strafe[1] = 0
 
     def update(self, dt):
-        self.update_sensor()
+        self.sensor.update(self.world)
         self.sync_frame += dt
         # modulus by max animation frames
         self.sync_frame %= 4
@@ -166,43 +191,12 @@ class Window(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
         return pyglet.event.EVENT_HANDLED
 
-    def init_sensor(self):
-        # Setup Sensor if connected
-        ser = False
-        try:
-            ser = serial.Serial('COM3', 9600, timeout=0.050)
-            ser.flushInput()
-        except:
-            print("Sensor not connected...")
-        finally:
-            return ser
-
-    def update_sensor(self):
-
-        try:
-            while self.ser.in_waiting:
-                sensor_input = self.ser.readline()
-                read_sensor = sensor_input.decode()
-                print(read_sensor)
-                self.total_serial_inputs += 1
-                if self.total_serial_inputs > 2:
-                    sensor_objects = read_sensor.split()
-                    for row in range(3):
-                        for column in range(3):
-                            block_stack = int(sensor_objects[row * 3 + column])
-                            for i in range(1, 4):
-                                if i > block_stack:
-                                    self.world.del_block((row, i - 1, column))
-                                else:
-                                    self.world.add_block((row, i - 1, column))
-        except:
-            pass
-
     def on_draw(self):
         self.clear()
         self.set_3d()
         self.grid.draw()
         self.world.draw()
+        self.sensor.draw()
         self.cursor_block.batch.draw()
         self.set_2d()
         self.fps_display.draw()
@@ -225,3 +219,5 @@ class Window(pyglet.window.Window):
         glCullFace(GL_BACK)
         glFrontFace(GL_CW)
         self.setup_fog()
+
+
