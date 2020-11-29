@@ -13,10 +13,12 @@ from boxel import Boxel, CursorBlock
 class World:
 
     def __init__(self):
-        self.boxel = []
         self.tex_index = 0
         self.tex_lst = self.init_textures()
         self.init_textures()
+        self.boxel = Boxel(self, (0, 0, 0), 0)  # Delete after UML generated
+        self.boxel = CursorBlock(self, (0, 0, 0)) # Delete after UML generated
+        self.boxel = []
 
     # Look in "assets/textures/boxels/*" for all textures
     def init_textures(self):
@@ -36,22 +38,24 @@ class World:
     def save(self):
         files = [('World File', '*.wld')]
         file = asksaveasfile(filetypes=files, defaultextension=files)
-        f = open(file.name, "wb")
-        data = []
-        for box in self.boxel:
-            data.append([box.tex_index, box.position])
-        pickle.dump(data, f)
-        f.close()
+        if file:
+            f = open(file.name, "wb")
+            data = []
+            for box in self.boxel:
+                data.append([box.tex_index, box.position])
+            pickle.dump(data, f)
+            f.close()
 
     def load(self):
         file_types = [('World File', '*.wld')]
         file = askopenfile(filetypes=file_types, defaultextension=file_types)
-        f = open(file.name, "rb")
-        data = pickle.load(f)
-        self.boxel = []
-        for i, j in data:
-            self.add_block(j, i)
-        f.close()
+        if file:
+            f = open(file.name, "rb")
+            data = pickle.load(f)
+            self.boxel = []
+            for i, j in data:
+                self.add_block(j, i)
+            f.close()
 
     def create_cursor(self):
         return CursorBlock(self, (0, 0, 0))

@@ -16,16 +16,19 @@ class Camera:
         self.rotation = x % 360, y
 
     def update(self, dt):
+        x, y, z = self.position
         motion_vector = self.get_motion_vector()
         speed = dt * 5
-        self.position = [x + y * speed for x, y in zip(self.position, motion_vector)]
+        new_x = x + motion_vector[0] * speed
+        new_y = y + motion_vector[1] * speed
+        new_z = z + motion_vector[2] * speed
+        self.position = [new_x, new_y, new_z]
 
     def get_motion_vector(self):
         x, y, z = self.strafe
         if x or z:
-            strafe = math.degrees(math.atan2(x, z))
-            yaw = self.rotation[0]
-            x_angle = math.radians(yaw + strafe)
-            x = math.cos(x_angle)
-            z = math.sin(x_angle)
+            strafe = math.atan2(x, z)
+            yaw = math.radians(self.rotation[0])
+            x = math.cos(yaw + strafe)
+            z = math.sin(yaw + strafe)
         return x, y, z
