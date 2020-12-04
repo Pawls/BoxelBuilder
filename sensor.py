@@ -10,6 +10,7 @@ class Sensor:
 
     def __init__(self):
         # Setup Sensor if connected
+        #self.boxel = CursorBlock(self, (0, 0, 0))  # Delete after UML generated
         self.boxel = []
         self.total_serial_inputs = 0
         self.ser = None

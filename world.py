@@ -15,9 +15,10 @@ class World:
     def __init__(self):
         self.tex_index = 0
         self.tex_lst = self.init_textures()
-        self.init_textures()
-        self.boxel = Boxel(self, (0, 0, 0), 0)  # Delete after UML generated
-        self.boxel = CursorBlock(self, (0, 0, 0)) # Delete after UML generated
+        #self.init_textures()
+        #self.boxel = Boxel(self, (0, 0, 0), 0)  # Delete after UML generated
+        #self.boxel = CursorBlock(self, (0, 0, 0)) # Delete after UML generated
+        self.boxel_hash = {}
         self.boxel = []
 
     # Look in "assets/textures/boxels/*" for all textures
@@ -52,6 +53,7 @@ class World:
         if file:
             f = open(file.name, "rb")
             data = pickle.load(f)
+            self.boxel_hash.clear()
             self.boxel = []
             for i, j in data:
                 self.add_block(j, i)
@@ -64,9 +66,12 @@ class World:
         for x in list(self.boxel):
             if x.position == list(xyz):
                 return
-        self.boxel.append(Boxel(self, xyz, tex))
+        self.boxel_hash[tuple(xyz)] = Boxel(self, xyz, tex)
+        self.boxel.append(self.boxel_hash[tuple(xyz)])
+        #self.boxel.append(Boxel(self, xyz, tex))
 
     def del_block(self, xyz):
+        self.boxel_hash.pop(xyz, None)
         for x in list(self.boxel):
             if x.position == list(xyz):
                 self.boxel.remove(x)

@@ -196,7 +196,8 @@ class Window(pyglet.window.Window):
         self.set_3d()
         self.grid.draw()
         self.world.draw()
-        self.cursor_block.batch.draw()
+        if not tuple(self.cursor_block.position) in self.world.boxel_hash:
+            self.cursor_block.batch.draw()
         self.sensor.draw()
         self.set_2d()
         self.fps_display.draw()

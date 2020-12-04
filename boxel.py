@@ -11,7 +11,6 @@ class Boxel:
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
         self.dim = list(dim)  # width, height, length
-        print(tex)
         if tex is None:
             self.tex_index = parent.tex_index
         else:
@@ -36,8 +35,9 @@ class Boxel:
     # using only texture coords (0,0)-(5/8,3/4). It should have been
     # incrementing by (1/5,1/3) until it reached (1,1) based on the fact
     # that the texture is 5 squares wide and 3 squares high.
-    def draw_block(self, position):
+    def draw_block(self, position, y_shift=0):
         x, y, z = position
+        y += y_shift
         dim = self.dim
         alpha = self.alpha
         self.batch.add(
@@ -96,9 +96,9 @@ class Boxel:
 
 
 class CursorBlock(Boxel):
-    inc = 0
 
     def __init__(self, parent, xyz, dim=(1, 1, 1)):
+        self.inc = 0
         self.batch = pyglet.graphics.Batch()
         self.position = list(xyz)
         self.dim = list(dim)  # width, height, length
@@ -108,13 +108,13 @@ class CursorBlock(Boxel):
         self.alpha = 0.75
         self.draw_block(xyz)
 
-    def update_position(self, xyz):
+    def update_position(self, xyz, y_shift=0):
         self.position = list(xyz)
         self.position[0] += (1 - self.dim[0]) / 2
         self.position[1] += (1 - self.dim[1]) / 2
         self.position[2] += (1 - self.dim[2]) / 2
         self.batch = pyglet.graphics.Batch()
-        self.draw_block(self.position)
+        self.draw_block(self.position, y_shift)
 
     def update_texture(self, parent):
         self.texture = parent.tex_lst[parent.tex_index][0]
@@ -122,6 +122,9 @@ class CursorBlock(Boxel):
         self.draw_block(self.position)
 
     def update(self, dt):
-        pass
-        #self.inc = (self.inc + math.pi * dt) % (2*math.pi)
-        #self.dim = [x + (dt * math.sin(self.inc)/6) for x in self.dim]
+        x, y, z = self.position
+        amplitude = 0.05
+        period = 2
+        self.inc = (self.inc + math.pi * dt) % (2*math.pi)
+        y_shift = amplitude * math.sin(period * self.inc) + amplitude
+        self.update_position((x, y, z), y_shift)
