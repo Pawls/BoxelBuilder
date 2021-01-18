@@ -39,25 +39,26 @@ class Boxel:
         x, y, z = position
         y += y_shift
         dim = self.dim
+        w, h, d = self.dim
         alpha = self.alpha
         self.batch.add(
             14,
             GL_TRIANGLE_STRIP,
             self.texture,
-            ("v3f/static", (x + dim[0], y, z,  # 1
-                            x, y, z,  # 2
-                            x + dim[0], y, z + dim[2],  # 3
-                            x, y, z + dim[2],  # 4
-                            x, y + dim[1], z + dim[2],  # 5
-                            x, y, z,  # 6
-                            x, y + dim[1], z,  # 7
-                            x + dim[0], y, z,  # 8
-                            x + dim[0], y + dim[1], z,  # 9
-                            x + dim[0], y, z + dim[2],  # 10
-                            x + dim[0], y + dim[1], z + dim[2],  # 11
-                            x, y + dim[1], z + dim[2],  # 12
-                            x + dim[0], y + dim[1], z,  # 13
-                            x, y + dim[1], z  # 14
+            ("v3f/static", (x + w, y, z + d,  # 0
+                            x, y, z + d,  # 1
+                            x + w, y, z,  # 2
+                            x, y, z,  # 3
+                            x, y + h, z,  # 4
+                            x, y, z + d,  # 1
+                            x, y + h, z + d,  # 5
+                            x + w, y, z + d,  # 0
+                            x + w, y + h, z + d,  # 6
+                            x + w, y, z,  # 2
+                            x + w, y + h, z,  # 7
+                            x, y + h, z,  # 4
+                            x + w, y + h, z + d,  # 6
+                            x, y + h, z + d  # 5
                             )
              ),
             ("t2f/static", (0, 0,  # 1
@@ -85,7 +86,7 @@ class Boxel:
                             255, 255, 255, alpha,  # 7
                             255, 255, 255, alpha,  # 8
                             255, 255, 255, alpha,  # 9
-                            255, 255, 255, alpha,  # 1255
+                            255, 255, 255, alpha,  # 12
                             255, 255, 255, alpha,  # 11
                             255, 255, 255, alpha,  # 12
                             255, 255, 255, alpha,  # 13

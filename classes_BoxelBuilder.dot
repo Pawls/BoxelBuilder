@@ -1,0 +1,22 @@
+digraph "classes_BoxelBuilder" {
+charset="utf-8"
+rankdir=BT
+overlap=false
+splines=true
+"0" [label="{Boxel|alpha : int\lbatch\ldim : list\linc : int\lposition : list\ltex_index : NoneType\ltex_sequence\ltexture\l|draw_block(position, y_shift)\lupdate(dt, sync_frame)\l}", shape="record"];
+"1" [label="{Camera|position : tuple, list\lrotation : tuple\lstrafe : list\l|get_motion_vector()\lmouse_motion(dx, dy)\lupdate(dt)\l}", shape="record"];
+"2" [label="{CursorBlock|alpha : float\lbatch\ldim : list\linc : int\lposition : list\ltex_index\ltex_sequence\ltexture\l|update(dt)\lupdate_position(xyz, y_shift)\lupdate_texture(parent)\l}", shape="record"];
+"3" [label="{Grid|columns : int\lfactor : tuple\llevel : int\lratio\lrows : int\lsize : int\l|draw()\lscroll(distance)\lselect(mouse_x, mouse_y, camera, window)\l}", shape="record"];
+"4" [label="{Sensor|boxel : list\ldim : tuple\lposition : tuple\lser : NoneType\ltotal_serial_inputs : int\l|add_cursorblock(world, xyz)\lcommit_blocks(world)\ldel_cursorblock(xyz)\ldraw()\ldraw_sensor()\linput_enter()\lmove_x(distance)\lmove_y(distance)\lmove_z(distance)\lupdate(world)\l}", shape="record"];
+"5" [label="{Window|camera\lcursor_block\lfps_display\lframe_rate : float\lgrid\llabel\lmouse_pos : tuple\lsensor\lsync_frame : int\lworld\l|adjust_stage_height(direction)\llabel_update()\lon_draw()\lon_key_press(symbol, modifiers)\lon_key_release(symbol, modifiers)\lon_mouse_drag(x, y, dx, dy, button, modifiers)\lon_mouse_motion(x, y, dx, dy)\lon_mouse_press(x, y, button, modifiers)\lon_mouse_scroll(x, y, mouse, direction)\lon_resize(width, height)\lset_2d()\lset_3d()\lsetup()\lsetup_fog()\lupdate(dt)\l}", shape="record"];
+"6" [label="{World|boxel : list\lboxel_hash : dict\ltex_index : int\ltex_lst\l|add_block(xyz, tex)\lcreate_cursor()\ldel_block(xyz)\ldraw()\linit_textures()\lload()\lsave()\lstress_test()\lupdate(dt, sync)\l}", shape="record"];
+"2" -> "0" [arrowhead="empty", arrowtail="none"];
+"0" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="boxel", style="solid"];
+"1" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="camera", style="solid"];
+"2" -> "4" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="boxel", style="solid"];
+"2" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="cursor_block", style="solid"];
+"3" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="grid", style="solid"];
+"4" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="sensor", style="solid"];
+"6" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="world", style="solid"];
+}
+

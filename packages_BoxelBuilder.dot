@@ -1,0 +1,20 @@
+digraph "packages_BoxelBuilder" {
+charset="utf-8"
+rankdir=BT
+"0" [label="__init__", shape="box"];
+"1" [label="boxel", shape="box"];
+"2" [label="camera", shape="box"];
+"3" [label="grid", shape="box"];
+"4" [label="main", shape="box"];
+"5" [label="sensor", shape="box"];
+"6" [label="test", shape="box"];
+"7" [label="window", shape="box"];
+"8" [label="world", shape="box"];
+"4" -> "7" [arrowhead="open", arrowtail="none"];
+"5" -> "1" [arrowhead="open", arrowtail="none"];
+"7" -> "2" [arrowhead="open", arrowtail="none"];
+"7" -> "3" [arrowhead="open", arrowtail="none"];
+"7" -> "5" [arrowhead="open", arrowtail="none"];
+"7" -> "8" [arrowhead="open", arrowtail="none"];
+"8" -> "1" [arrowhead="open", arrowtail="none"];
+}
