@@ -32,6 +32,7 @@ class Window(pyglet.window.Window):
                                        font_size=12,
                                        x=2, y=self.height - 15, multiline=True, width=120)
         # stress_test()
+        # self.world.random_build()
         pyglet.clock.schedule(self.update)
 
     def label_update(self):
@@ -72,79 +73,79 @@ class Window(pyglet.window.Window):
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = (x, y)
 
-    def on_key_press(self, symbol, modifiers):
+    def on_key_press(self, button, modifiers):
 
-        if symbol == window.key.ESCAPE:
+        if button == window.key.ESCAPE:
             self.close()
         speed = 1
-        if symbol == window.key.W:
+        if button == window.key.W:
             self.camera.strafe[0] = -speed
-        elif symbol == window.key.S:
+        elif button == window.key.S:
             self.camera.strafe[0] = speed
-        elif symbol == window.key.A:
+        elif button == window.key.A:
             self.camera.strafe[2] = -speed
-        elif symbol == window.key.D:
+        elif button == window.key.D:
             self.camera.strafe[2] = speed
-        elif symbol == window.key.R:
+        elif button == window.key.R:
             self.camera.strafe[1] = speed
-        elif symbol == window.key.F:
+        elif button == window.key.F:
             self.camera.strafe[1] = -speed
-        elif symbol == window.key.RETURN:
+        elif button == window.key.RETURN:
             self.sensor.input_enter()
-        elif symbol == window.key.NUM_ADD:
+        elif button == window.key.NUM_ADD:
             self.world.tex_index += 1
             self.world.tex_index %= len(self.world.tex_lst)
             self.cursor_block.update_texture(self.world)
-        elif symbol == window.key.NUM_SUBTRACT:
+        elif button == window.key.NUM_SUBTRACT:
             self.world.tex_index -= 1
             self.world.tex_index %= len(self.world.tex_lst)
             self.cursor_block.update_texture(self.world)
-        elif symbol == window.key.F11:
+        elif button == window.key.F11:
             self.world.save()
-        elif symbol == window.key.F12:
+        elif button == window.key.F12:
             self.world.load()
-        elif symbol == window.key.NUM_1:
+        elif button == window.key.NUM_1:
             pass
-        elif symbol == window.key.NUM_2:
+        elif button == window.key.NUM_2:
             self.sensor.move_z(1)
-        elif symbol == window.key.NUM_3:
+        elif button == window.key.NUM_3:
             pass
-        elif symbol == window.key.NUM_4:
+        elif button == window.key.NUM_4:
             self.sensor.move_x(-1)
-        elif symbol == window.key.NUM_5:
+        elif button == window.key.NUM_5:
             self.sensor.commit_blocks(self.world)
-        elif symbol == window.key.NUM_6:
+        elif button == window.key.NUM_6:
             self.sensor.move_x(1)
-        elif symbol == window.key.NUM_7:
+        elif button == window.key.NUM_7:
             pass
-        elif symbol == window.key.NUM_8:
+        elif button == window.key.NUM_8:
             self.sensor.move_z(-1)
-        elif symbol == window.key.NUM_9:
-            pass
-        elif symbol == window.key.PAGEUP:
+        elif button == window.key.NUM_9:
+            self.world.random_build()
+            #pass
+        elif button == window.key.PAGEUP:
             self.adjust_stage_height(1)
-        elif symbol == window.key.PAGEDOWN:
+        elif button == window.key.PAGEDOWN:
             self.adjust_stage_height(-1)
 
-    def on_key_release(self, symbol, modifiers):
-        if symbol == window.key.W:
+    def on_key_release(self, button, modifiers):
+        if button == window.key.W:
             self.camera.strafe[0] = 0
-        elif symbol == window.key.S:
+        elif button == window.key.S:
             self.camera.strafe[0] = 0
-        elif symbol == window.key.A:
+        elif button == window.key.A:
             self.camera.strafe[2] = 0
-        elif symbol == window.key.D:
+        elif button == window.key.D:
             self.camera.strafe[2] = 0
-        elif symbol == window.key.R:
+        elif button == window.key.R:
             self.camera.strafe[1] = 0
-        elif symbol == window.key.F:
+        elif button == window.key.F:
             self.camera.strafe[1] = 0
 
     def update(self, dt):
         self.sensor.update(self.world)
         self.sync_frame += dt
-        # modulus by max animation frames
-        self.sync_frame %= 4
+        self.sync_frame %= 4  # modulus by max animation frames
 
         mouse_over = self.grid.select(*self.mouse_pos, self.camera, self)
         self.cursor_block.update_position(mouse_over)
@@ -211,14 +212,11 @@ class Window(pyglet.window.Window):
         glFogf(GL_FOG_START, 20.0)
         glFogf(GL_FOG_END, 60.0)
 
-    def setup(self):
-        # Background color (r,g,b,a)
-        glClearColor(0.3, 0.8, 0.96, 1)
+    def setup(self):        
+        glClearColor(0.3, 0.8, 0.96, 1)  # Background color (r,g,b,a)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
-        glFrontFace(GL_CW)
         self.setup_fog()
 
 

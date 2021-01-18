@@ -7,6 +7,8 @@ from tkinter.filedialog import asksaveasfile, askopenfile
 import pyglet
 from pyglet.gl import glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST, GL_TEXTURE_MAG_FILTER
 
+import random
+
 from boxel import Boxel, CursorBlock
 
 
@@ -68,7 +70,6 @@ class World:
                 return
         self.boxel_hash[tuple(xyz)] = Boxel(self, xyz, tex)
         self.boxel.append(self.boxel_hash[tuple(xyz)])
-        #self.boxel.append(Boxel(self, xyz, tex))
 
     def del_block(self, xyz):
         self.boxel_hash.pop(xyz, None)
@@ -82,6 +83,17 @@ class World:
             for j in range(3, 13):
                 for k in range(16):
                     self.add_block((i, k, j))
+
+    def random_build(self):
+        for i in range(0, 16):
+            for j in range(0, 16):
+                for k in range(60):
+                    if k == 0:
+                        #if random.randint(0, 2) != 0:
+                        self.add_block((i, k, j))
+                    else:
+                        if random.randint(0, 2) != 0 and (i, k-1, j) in self.boxel_hash:
+                            self.add_block((i, k, j))
 
     def update(self, dt, sync):
         for x in self.boxel:

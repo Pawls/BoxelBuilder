@@ -1,9 +1,8 @@
 import serial
-from pyglet.gl import GL_QUADS, glFrontFace, GL_CCW, GL_CW
+from pyglet.gl import GL_QUADS, glCullFace, GL_BACK, GL_FRONT
 
 from boxel import CursorBlock
 from pyglet import graphics
-from pyglet.gl import GL_TRIANGLE_STRIP
 
 
 class Sensor:
@@ -75,6 +74,7 @@ class Sensor:
                 return
 
     def draw_sensor(self):
+        glCullFace(GL_FRONT)
         x, y, z = self.position
         w, h, d = self.dim
         overlap = 0.05
@@ -118,6 +118,7 @@ class Sensor:
                             )
              )
         )
+        glCullFace(GL_BACK)
 
     def draw(self):
         self.draw_sensor()

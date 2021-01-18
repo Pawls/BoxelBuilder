@@ -17,7 +17,7 @@ class Grid:
     # Get grid sector from mouse click
     def select(self, mouse_x, mouse_y, camera, window):
         cam_yaw, cam_pitch = (math.radians(x) for x in camera.rotation)
-        cam_pitch = max(min(cam_pitch, 1.565), -1.565) # Prevent pitch from being perfect vertical
+        cam_pitch = max(min(cam_pitch, 1.565), -1.565)  # Prevent pitch from being perfect vertical
         cam_fov = 45
         cell_size = 1
         level = self.level
@@ -41,7 +41,6 @@ class Grid:
         dx /= norm
         dy /= norm
         dz /= norm
-        #print('D', (round(dx, 3), round(dy, 3), round(dz, 3)))
 
         # Define the "up" vector
         ux, uy, uz = (0, 1, 0)
@@ -57,7 +56,6 @@ class Grid:
         ux /= norm
         uy /= norm
         uz /= norm
-        #print('U', (round(ux, 3), round(uy, 3), round(uz, 3)))
 
         # Scale by the field of view
         fov = math.tan(math.radians(cam_fov) / 2)
@@ -91,7 +89,7 @@ class Grid:
         #  Finally, determine the cell on the plane that intersects vector M
         mouse_x = round((x - cell_size / 2 + (y - level) * mx / my))
         mouse_y = round((z - cell_size / 2 - (y - level) * mz / my))
-        return (mouse_x, level, mouse_y)
+        return mouse_x, level, mouse_y
 
     def scroll(self, distance):
         self.level += int(distance)
